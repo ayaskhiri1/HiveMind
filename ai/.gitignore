@@ -1,0 +1,200 @@
+# ============================================================================
+# HIVEMIND AI - Détection d'anomalies réseau
+# Fichiers à ignorer par Git 
+# ============================================================================
+
+# Environnement virtuel Python
+venv/
+
+# Données générées et opérationnelles
+archive/
+logs/
+results/
+__pycache__/
+
+# ==============================
+# FICHIERS LOGS
+# ==============================
+
+# Logs d'application
+api.log
+monitor.log
+
+# Logs de développement
+*.log
+debug.log
+error.log
+
+# ==============================
+# FICHIERS D'ENVIRONNEMENT
+# ==============================
+
+# Variables d'environnement (NE PAS COMMITER !)
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+
+# Configuration locale
+config.local.py
+settings.local.json
+
+# ==============================
+# PYTHON - COMPILATION & CACHE
+# ==============================
+
+# Byte-compiled Python files
+*.pyc
+*.pyo
+*.pyd
+
+# Cache Python
+.pytest_cache/
+.mypy_cache/
+__pycache__/
+*.py[cod]
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+*.egg
+.coverage
+htmlcov/
+
+# ==============================
+# FICHIERS SENSIBLES / SECRETS
+# ==============================
+
+# Clés et certificats
+*.key
+*.pem
+*.crt
+*.cert
+
+# Fichiers d'authentification
+credentials.json
+*.secret
+*.token
+
+# ==============================
+# SYSTEME & EDITEURS
+# ==============================
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+
+# Windows
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# IDE - VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# IDE - PyCharm
+.idea/
+*.iml
+*.iws
+
+# Autres éditeurs
+*.sublime-workspace
+*.sublime-project
+*.swp
+*.swo
+*~
+
+# ==============================
+# FICHIERS TEMPORAIRES
+# ==============================
+
+# Fichiers temporaires
+*.tmp
+*.temp
+.temp/
+tmp/
+temp/
+
+# Backup files
+*.bak
+*.backup
+*.old
+*.orig
+*.save
+
+# ==============================
+# OLLAMA & MODELES IA
+# ==============================
+
+# Cache et modèles Ollama locaux
+.ollama/
+ollama_cache/
+models/
+
+# ==============================
+# DONNEES GENEREES PAR L'APPLICATION
+# ==============================
+
+# Résultats d'analyse générés (ne pas commiter)
+results/*.json
+
+# Uploads temporaires
+uploads/
+processed/
+
+# ==============================
+# FICHIERS A CONSERVER (EXCLUSIONS)
+# ==============================
+
+# Ne pas ignorer ces fichiers importants
+!.gitignore
+!README.md
+!requirements.txt
+!.env.example
+!api.py
+!detect_anomaly.py
+!monitor_logs.py
+!monitoring_dashboard.py
+!test_scripts.py
+
+# Fichiers de structure de dossiers vides
+!logs/.gitkeep
+!archive/.gitkeep
+!results/.gitkeep
+
+# ==============================
+# AUTRES
+# ==============================
+
+# Fichiers de lock
+*.lock
+pip.lock
+
+# Packages système (au cas où)
+package-lock.json
+yarn.lock
+
+# Fichiers volumineux
+*.h5
+*.pkl
+*.pickle
+*.model
+*.large
+
+# ==============================
+# NOTES
+# ==============================
+# Les logs et données générées sont ignorées
+# Les fichiers de configuration locale sont ignorés
+# L'environnement virtuel est ignoré

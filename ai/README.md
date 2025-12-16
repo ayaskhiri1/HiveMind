@@ -47,7 +47,7 @@ Détection proactive des menaces réseau par analyse intelligente des log
 
 ### Installation
 # 1. Cloner le projet
-git clone https://github.com/ton-equipe/hivemind-ai.git
+git clone https://github.com/ayaskhiri1/HiveMind/tree/eya/ai.git
 cd hivemind-ai
 
 # 2. Créer un environnement virtuel
@@ -107,21 +107,37 @@ python detect_anomaly.py
 📁 Structure du Projet
 
 hivemind-ai/
-├── api.py                    # Serveur API Flask principal
+
+├── api.py                    # Serveur API Flask 
+
+principal
+
 ├── detect_anomaly.py         # Module IA de détection d'anomalies
+
 ├── monitor_logs.py           # Service de surveillance automatique
+
 ├── monitoring_dashboard.py      # Dashboard temps réel
+
 ├── requirements.txt          # Dépendances Python
+
 ├── .env.example              # Configuration d'environnement
+
 ├── README.md                 # Ce fichier
+
 ├── .gitignore                # Fichiers à ignorer par Git
+
 │
 ├── logs/                     # Dossier des logs à analyser
+
 ├── archive/                  # Logs archivés après traitement
+
 ├── results/                  # Rapports d'analyse
+
 │
 ├── api.log                   # Logs du serveur API
+
 └── monitor.log              # Logs du service de surveillance
+
 
 
 🔧 Configuration

@@ -48,6 +48,7 @@ Détection proactive des menaces réseau par analyse intelligente des log
 ### Installation
 # 1. Cloner le projet
 git clone https://github.com/ayaskhiri1/HiveMind/tree/eya/ai.git
+
 cd hivemind-ai
 
 # 2. Créer un environnement virtuel
@@ -194,7 +195,7 @@ Analyse plusieurs logs en une requête.
 POST /api/v1/analyze/file
 Upload et analyse d'un fichier log.
 
-bash
+
 curl -X POST http://localhost:5001/api/v1/analyze/file \
   -F "file=@/path/to/logfile.log" \
   -F "model=llama3:latest"
@@ -208,29 +209,43 @@ GET /api/v1/status
 Statut complet du système.
 
 
+
+
 🔍 Exemples d'Analyse
+
 Logs détectés comme anomalies
 ✅ "User admin logged in successfully" → Normal
+
 ⚠️  "Failed login attempt for user root" → Warning
+
 🚨 "Port scan detected from 192.168.1.100" → Anomaly
+
 🔴 "DDoS attack in progress from multiple IPs" → Critical
+
 
 
 Réponse CIEMS Exemple
 {
   "anomaly": true,
+  
   "confidence": 0.92,
+  
   "category": "network_scan",
+
   "ciems": {
     "prevention": "Bloquer l'IP source temporairement (15 min)",
+
     "recommendation": "Activer le rate limiting sur le firewall",
+
     "auto_response": "firewall_block_temp",
+
     "severity": "high"
   }
 }
 
 
 🐛 Dépannage
+
 Ollama non accessible
 # Vérifier qu'Ollama tourne
 ollama serve
@@ -250,24 +265,40 @@ pip install --upgrade pip
 pip install -r requirements.txt --force-reinstall
 
 
+
 📊 Dashboard
+
 Le dashboard Rich fournit une interface temps réel :
+
 ✅ Statistiques globales
+
 📈 Graphiques des anomalies
+
 🚨 Alertes en temps réel
+
 🏷️ Catégorisation automatique
+
 ⏱️ Historique des événements
 
 
+
+
 🤝 Contribution
+
 Fork le projet
+
 Créer une branche (git checkout -b feature/AmazingFeature)
+
 Commiter les changements (git commit -m 'Add AmazingFeature')
+
 Pusher la branche (git push origin feature/AmazingFeature)
+
 Ouvrir une Pull Request
 
 
+
 🙏 Remerciements
+
 Ollama pour les modèles LLM locaux
 Flask pour le framework web
 Rich pour l'interface CLI

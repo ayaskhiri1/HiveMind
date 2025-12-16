@@ -300,6 +300,9 @@ Ouvrir une Pull Request
 🙏 Remerciements
 
 Ollama pour les modèles LLM locaux
+
 Flask pour le framework web
+
 Rich pour l'interface CLI
+
 La communauté open source

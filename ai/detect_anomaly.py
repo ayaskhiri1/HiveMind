@@ -41,83 +41,181 @@ SUPPORTED_ENCODINGS = ['utf-8', 'cp1252', 'latin-1', 'iso-8859-1']
 
 def generate_ciems_response(analysis: Dict, log_text: str) -> Dict:
     """
-    Génère des recommandations CIEMS basées sur l'anomalie détectée
-    
-    Args:
-        analysis (Dict): Résultat d'analyse d'anomalie
-        log_text (str): Message de log original
-    
-    Returns:
-        Dict: Recommandations CIEMS avec:
-            - prevention: Action préventive immédiate
-            - recommendation: Recommandation à long terme
-            - auto_response: Type de réponse automatisée
-            - severity: Niveau de sévérité
-    
-    Example:
-        >>> ciems = generate_ciems_response(
-        ...     {"anomaly": True, "category": "network_scan", "confidence": 0.9},
-        ...     "Port scan detected from 192.168.1.100"
-        ... )
-        >>> print(ciems)
-        {
-            "prevention": "Bloquer l'IP source temporairement (15 min)",
-            "recommendation": "Activer le rate limiting sur le firewall",
-            "auto_response": "firewall_block_temp",
-            "severity": "high"
-        }
+    Génère des recommandations CIEMS professionnelles et spécifiques
+    VERSION AMÉLIORÉE : Réponses détaillées pour chaque catégorie
     """
     if not analysis.get("anomaly"):
         return {
             "prevention": None,
             "recommendation": "Continuer la surveillance normale",
             "auto_response": None,
-            "severity": "none"
+            "severity": "none",
+            "technical_details": "Aucune anomalie détectée",
+            "priority": 0
         }
     
-    category = analysis.get("category", "unknown")
+    category = analysis.get("category", "unknown").lower()
     confidence = analysis.get("confidence", 0)
     
     # Mapping catégorie → actions
     ciems_rules = {
+        # ATTAQUES RÉSEAU
         "network_scan": {
-            "prevention": "Bloquer l'IP source temporairement (15 min)",
-            "recommendation": "Activer le rate limiting sur le firewall",
+            "prevention": "🛡️ Blocage IP source immédiat (15 minutes) + Rate limiting",
+            "recommendation": "1. Activer IDS/IPS (Snort/Suricata)\n2. Configurer fail2ban avec seuil 5 connexions/min\n3. Vérifier les ports exposés (nmap audit)\n4. Activer logging détaillé firewall",
             "auto_response": "firewall_block_temp",
-            "severity": "high"
+            "severity": "high",
+            "technical_details": f"Scan de ports détecté. Confidence: {confidence:.0%}. Action: DROP paquets source pendant 15min.",
+            "priority": 8,
+            "estimated_impact": "Moyen - Tentative de reconnaissance réseau",
+            "remediation_time": "15 minutes (automatique)",
+            "soc_alert": True
         },
-        "authentication_failure": {
-            "prevention": "Bloquer l'IP après 3 tentatives échouées",
-            "recommendation": "Activer fail2ban et MFA",
-            "auto_response": "account_lockout",
-            "severity": "high" if confidence > 0.8 else "medium"
+        
+        "port_scan": {
+            "prevention": "🛡️ Blocage IP source immédiat (15 minutes) + Rate limiting",
+            "recommendation": "1. Activer IDS/IPS (Snort/Suricata)\n2. Configurer fail2ban avec seuil 5 connexions/min\n3. Vérifier les ports exposés (nmap audit)\n4. Activer logging détaillé firewall",
+            "auto_response": "firewall_block_temp",
+            "severity": "high",
+            "technical_details": f"Scan de ports détecté. Confidence: {confidence:.0%}. Action: DROP paquets source pendant 15min.",
+            "priority": 8,
+            "estimated_impact": "Moyen - Tentative de reconnaissance réseau",
+            "remediation_time": "15 minutes (automatique)",
+            "soc_alert": True
         },
+        
+        # ATTAQUES DDOS
         "ddos_attack": {
-            "prevention": "Activer le mode DDoS protection sur le CDN",
-            "recommendation": "Augmenter la capacité serveur temporairement",
+            "prevention": "🚨 ACTIVATION MODE DDOS PROTECTION IMMÉDIATE\n- Cloudflare/Akamai: Under Attack Mode ON\n- Rate limiting agressif: 10 req/s par IP\n- Challenge CAPTCHA pour toutes requêtes suspectes\n- Géo-blocking pays non autorisés",
+            "recommendation": "1. Activer WAF (Web Application Firewall) en mode strict\n2. Augmenter capacité serveur (autoscaling +200%)\n3. Activer CDN caching maximal (TTL 1h)\n4. Contacter ISP pour mitigation upstream\n5. Préparer communication clients (status page)\n6. Logger toutes IPs sources pour analyse forensique",
             "auto_response": "cloudflare_ddos_mode",
-            "severity": "critical"
+            "severity": "critical",
+            "technical_details": f"Attaque DDoS détectée. Confidence: {confidence:.0%}. Protocole: HTTP Flood probable. Volume estimé: Critique. Action: Activation protection multi-couches.",
+            "priority": 10,
+            "estimated_impact": "CRITIQUE - Service potentiellement indisponible",
+            "remediation_time": "30-60 minutes (avec mitigation)",
+            "soc_alert": True,
+            "incident_response": "Déclencher procédure IR-001: DDoS Response Plan"
         },
+        
+        "ddos": {  # Alias
+            "prevention": "🚨 ACTIVATION MODE DDOS PROTECTION IMMÉDIATE\n- Cloudflare/Akamai: Under Attack Mode ON\n- Rate limiting agressif: 10 req/s par IP\n- Challenge CAPTCHA pour toutes requêtes suspectes\n- Géo-blocking pays non autorisés",
+            "recommendation": "1. Activer WAF (Web Application Firewall) en mode strict\n2. Augmenter capacité serveur (autoscaling +200%)\n3. Activer CDN caching maximal (TTL 1h)\n4. Contacter ISP pour mitigation upstream\n5. Préparer communication clients (status page)\n6. Logger toutes IPs sources pour analyse forensique",
+            "auto_response": "cloudflare_ddos_mode",
+            "severity": "critical",
+            "technical_details": f"Attaque DDoS détectée. Confidence: {confidence:.0%}. Action: Activation protection multi-couches.",
+            "priority": 10,
+            "estimated_impact": "CRITIQUE - Service potentiellement indisponible",
+            "remediation_time": "30-60 minutes (avec mitigation)",
+            "soc_alert": True,
+            "incident_response": "Déclencher procédure IR-001: DDoS Response Plan"
+        },
+        
+        # AUTHENTIFICATION
+        "authentication_failure": {
+            "prevention": "🔒 Blocage compte après 3 tentatives + IP blacklist 1h",
+            "recommendation": "1. Forcer MFA (Multi-Factor Authentication) pour tous comptes\n2. Déployer fail2ban avec jail SSH/HTTP\n3. Audit des mots de passe (force minimum 12 caractères)\n4. Notification email/SMS tentatives échouées\n5. Vérifier logs accès pour pattern bruteforce",
+            "auto_response": "account_lockout",
+            "severity": "high" if confidence > 0.8 else "medium",
+            "technical_details": f"Échecs d'authentification répétés. Confidence: {confidence:.0%}. Bruteforce probable.",
+            "priority": 7,
+            "estimated_impact": "Élevé - Tentative d'accès non autorisé",
+            "remediation_time": "Immédiat (auto-lock)",
+            "soc_alert": True
+        },
+        
+        "bruteforce": {
+            "prevention": "🔒 Blocage compte + IP après 3 tentatives (1 heure)",
+            "recommendation": "1. Activer MFA obligatoire\n2. Configurer fail2ban (jail SSH/HTTP)\n3. Policy mots de passe renforcée (min 12 chars + complexité)\n4. Alertes temps réel (email/Slack)\n5. Analyse forensique des logs",
+            "auto_response": "account_lockout",
+            "severity": "high",
+            "technical_details": f"Attaque bruteforce détectée. Confidence: {confidence:.0%}. Protocole: SSH/HTTP probable.",
+            "priority": 8,
+            "estimated_impact": "Élevé - Compromission compte possible",
+            "remediation_time": "Immédiat",
+            "soc_alert": True
+        },
+        
+        # MALWARE
         "malware_detected": {
-            "prevention": "Isoler immédiatement la machine du réseau",
-            "recommendation": "Scanner complet avec antivirus, réinitialiser les credentials",
+            "prevention": "☣️ QUARANTAINE IMMÉDIATE HOST INFECTÉ\n- Isolation réseau (VLAN quarantaine)\n- Blocage toutes connexions (in/out)\n- Snapshot état actuel (forensique)\n- Désactivation comptes utilisateur local",
+            "recommendation": "1. Scanner complet multi-antivirus (ClamAV + Windows Defender)\n2. Analyse forensique mémoire RAM (Volatility)\n3. Vérifier persistence (registry, startup, cron)\n4. Réinitialiser TOUS les credentials système\n5. Restaurer depuis backup propre (< 7 jours)\n6. Notifier CERT/ANSSI si APT suspecté",
             "auto_response": "host_quarantine",
-            "severity": "critical"
+            "severity": "critical",
+            "technical_details": f"Malware détecté. Confidence: {confidence:.0%}. Type: À identifier (analyse en cours). Host: Quarantaine réseau.",
+            "priority": 10,
+            "estimated_impact": "CRITIQUE - Compromission système",
+            "remediation_time": "4-8 heures (investigation + cleanup)",
+            "soc_alert": True,
+            "incident_response": "Déclencher procédure IR-003: Malware Incident Response"
         },
+        
+        # EXFILTRATION DE DONNÉES
         "data_exfiltration": {
-            "prevention": "Bloquer toutes les connexions sortantes suspectes",
-            "recommendation": "Audit de sécurité complet, rotation des clés",
+            "prevention": "🚫 BLOCAGE TOTAL CONNEXIONS SORTANTES SUSPECTES\n- Firewall: DROP toutes connexions non whitelistées\n- DLP (Data Loss Prevention): Mode strict\n- Capture trafic réseau (Wireshark/tcpdump)\n- Isolation complète host source",
+            "recommendation": "1. Audit complet des données exfiltrées (volume, destination)\n2. Rotation immédiate de TOUTES les clés/tokens/credentials\n3. Investigation forensique approfondie (timeline complète)\n4. Vérification intégrité backups\n5. Notification RGPD si données personnelles (72h max)\n6. Déclaration CNIL/autorités si nécessaire\n7. Communication clients si données exposées",
             "auto_response": "network_isolation",
-            "severity": "critical"
+            "severity": "critical",
+            "technical_details": f"Exfiltration de données détectée. Confidence: {confidence:.0%}. Volume: À quantifier. Destination: Analyse en cours.",
+            "priority": 10,
+            "estimated_impact": "CRITIQUE - Fuite données sensibles",
+            "remediation_time": "24-48 heures (investigation complète)",
+            "soc_alert": True,
+            "incident_response": "Déclencher procédure IR-004: Data Breach Response + Notification légale",
+            "legal_obligation": "Notification RGPD sous 72h si données personnelles"
+        },
+        
+        # INJECTION SQL
+        "sql_injection": {
+            "prevention": "🛡️ Blocage IP + Analyse requête malveillante\n- WAF: Bloquer pattern SQL (UNION, SELECT, DROP)\n- Rate limiting: 1 req/s pour IP suspecte\n- Session utilisateur invalidée",
+            "recommendation": "1. Audit code application (prepared statements)\n2. Review toutes requêtes SQL (utiliser ORM)\n3. Vérifier si données compromises (logs BDD)\n4. Activer SQL query logging (performance impact)\n5. Tester avec SQLMap (pentest interne)\n6. Formation développeurs (OWASP Top 10)",
+            "auto_response": "waf_block",
+            "severity": "critical",
+            "technical_details": f"Tentative injection SQL. Confidence: {confidence:.0%}. Payload détecté. DB: À vérifier.",
+            "priority": 9,
+            "estimated_impact": "Critique - Accès BDD possible",
+            "remediation_time": "2-4 heures (patch + audit)",
+            "soc_alert": True
+        },
+        
+        # XSS (Cross-Site Scripting)
+        "xss_attack": {
+            "prevention": "🛡️ Sanitize input + CSP (Content Security Policy)\n- Bloquer payload JavaScript malveillant\n- Invalider sessions utilisateur concernées",
+            "recommendation": "1. Review code: escape tous inputs utilisateur\n2. Activer CSP headers strict (script-src 'self')\n3. Utiliser bibliothèques sanitization (DOMPurify)\n4. Audit cookies (HttpOnly, Secure, SameSite)\n5. Test automatisé XSS (Burp Suite/OWASP ZAP)",
+            "auto_response": "waf_block",
+            "severity": "high",
+            "technical_details": f"Tentative XSS détectée. Confidence: {confidence:.0%}. Type: À identifier (Reflected/Stored/DOM).",
+            "priority": 7,
+            "estimated_impact": "Élevé - Vol de session utilisateur",
+            "remediation_time": "1-2 heures",
+            "soc_alert": True
+        },
+        
+        # ACCÈS NON AUTORISÉ
+        "unauthorized_access": {
+            "prevention": "🚫 Révocation accès immédiate + Audit trail\n- Terminer toutes sessions actives\n- Révoquer tokens/API keys\n- Blocage IP source",
+            "recommendation": "1. Investigation: comment accès obtenu?\n2. Audit permissions (principe moindre privilège)\n3. Review logs accès (timeline complète)\n4. Vérifier compromission credentials\n5. Renforcer contrôles accès (Zero Trust)",
+            "auto_response": "revoke_access",
+            "severity": "high",
+            "technical_details": f"Accès non autorisé détecté. Confidence: {confidence:.0%}. User/IP à identifier.",
+            "priority": 8,
+            "estimated_impact": "Élevé - Accès ressource protégée",
+            "remediation_time": "1-3 heures",
+            "soc_alert": True
         }
     }
     
     # Récupération de la réponse CIEMS ou réponse par défaut
     response = ciems_rules.get(category, {
-        "prevention": "Surveillance accrue de l'événement",
-        "recommendation": "Analyser manuellement pour déterminer la nature",
+        "prevention": f"⚠️ Surveillance accrue + Logging détaillé de l'événement",
+        "recommendation": f"1. Analyser manuellement le log pour catégorisation précise\n2. Corréler avec autres événements de sécurité\n3. Rechercher IoC (Indicators of Compromise) similaires\n4. Documenter dans SIEM pour futures détections\n5. Créer règle personnalisée si pattern récurrent",
         "auto_response": "alert_admin",
-        "severity": "medium" if confidence > 0.7 else "low"
+        "severity": "medium" if confidence > 0.7 else "low",
+        "technical_details": f"Anomalie détectée (catégorie: {category}). Confidence: {confidence:.0%}. Classification: Nécessite analyse manuelle.",
+        "priority": 5,
+        "estimated_impact": "Moyen - Nécessite investigation",
+        "remediation_time": "Variable (analyse requise)",
+        "soc_alert": False
     })
     
     # Ajout des métadonnées
@@ -125,7 +223,9 @@ def generate_ciems_response(analysis: Dict, log_text: str) -> Dict:
         "category": category,
         "confidence": confidence,
         "timestamp": datetime.now().isoformat(),
-        "log_sample": log_text[:100]  # Échantillon du log pour référence
+        "log_sample": log_text[:100],
+        "detection_method": "AI-based (Ollama LLM)",
+        "false_positive_probability": round((1 - confidence) * 100, 1)
     })
     
     return response
@@ -478,69 +578,46 @@ def main():
             if ciems.get("severity") == "none":
                 print("✅ Aucune action requise")
             else:
-                print(f"⚠️  Sévérité: {ciems.get('severity', 'unknown').upper()}")
-                print(f"🛡️  Prévention: {ciems.get('prevention', 'N/A')}")
-                print(f"💡 Recommandation: {ciems.get('recommendation', 'N/A')}")
-                print(f"🤖 Réponse auto: {ciems.get('auto_response', 'N/A')}")
+                print(f"\n⚠️  SÉVÉRITÉ: {ciems.get('severity', 'unknown').upper()}")
+                print(f"📊 Confiance: {ciems.get('confidence', 0):.0%}")
+                print(f"🎯 Priorité: {ciems.get('priority', 0)}/10")
+                print(f"\n🛡️  PRÉVENTION IMMÉDIATE:")
+                print(f"   {ciems.get('prevention', 'N/A')}")
+                print(f"\n💡 RECOMMANDATIONS:")
+                print(f"   {ciems.get('recommendation', 'N/A')}")
+                print(f"\n🤖 Réponse Automatique: {ciems.get('auto_response', 'N/A')}")
+                print(f"⏱️  Temps de remédiation: {ciems.get('remediation_time', 'N/A')}")
+                print(f"📈 Impact estimé: {ciems.get('estimated_impact', 'N/A')}")
         else:
-            print(f"📊 Résultat complet: {json.dumps(result, indent=2, ensure_ascii=False)}")
+            print(f"\n📊 Résultat complet:")
+            print(json.dumps(result, indent=2, ensure_ascii=False))
     
     # Analyser un fichier
     elif args.file:
         if os.path.exists(args.file):
             result = analyze_log_file(args.file, args.model)
-            
-            if args.ciems_only:
-                print("\n📊 RÉSUMÉ CIEMS:")
-                print(f"Fichier: {result.get('file', 'N/A')}")
-                print(f"Anomalies détectées: {result.get('statistics', {}).get('anomalies_detected', 0)}")
-                
-                ciems_summary = result.get("ciems_summary", {})
-                if ciems_summary:
-                    print("\n📈 RÉPARTITION DES SÉVÉRITÉS:")
-                    for severity, count in ciems_summary.get("severity_breakdown", {}).items():
-                        print(f"  {severity.upper()}: {count}")
-                    
-                    print("\n💡 RECOMMANDATIONS PRINCIPALES:")
-                    for i, rec in enumerate(ciems_summary.get("recommendations_summary", [])[:5], 1):
-                        print(f"  {i}. {rec}")
-                else:
-                    print("✅ Aucune recommandation CIEMS (pas d'anomalies critiques)")
-            else:
-                print(json.dumps(result, indent=2, ensure_ascii=False))
+            print(json.dumps(result, indent=2, ensure_ascii=False))
         else:
             print(f"❌ Fichier non trouvé: {args.file}")
     
-    # Mode interactif
     else:
-        print("🤖 Analyseur de logs IA - Mode interactif")
-        print("Tapez 'quit' pour quitter")
-        print(f"Modèle par défaut: {DEFAULT_MODEL}")
-        print("-" * 50)
-        
+        print("🤖 Mode interactif - Tapez 'quit' pour quitter")
         while True:
             try:
-                log_input = input("\n📝 Entrez un log à analyser: ").strip()
+                log_input = input("\n📝 Entrez un log: ").strip()
                 if log_input.lower() in ['quit', 'exit', 'q']:
                     break
                 if log_input:
                     result = detect_anomaly(log_input)
                     
-                    # Afficher les recommandations CIEMS en priorité
                     if result.get("anomaly"):
                         ciems = result.get("ciems", {})
                         print(f"\n🚨 ANOMALIE DÉTECTÉE: {result['reason']}")
                         print(f"   Sévérité: {ciems.get('severity', 'unknown').upper()}")
                         print(f"   Prévention: {ciems.get('prevention', 'N/A')}")
-                        print(f"   Recommandation: {ciems.get('recommendation', 'N/A')}")
-                        print(f"   Confiance: {result['confidence']:.2%}")
+                        print(f"   Recommandation: {ciems.get('recommendation', 'N/A')[:100]}...")
                     else:
-                        print(f"✅ {result['reason']} (confiance: {result['confidence']:.2%})")
-                    
-                    # Option pour voir le résultat complet
-                    view_full = input("Voir le résultat complet? (o/n): ").strip().lower()
-                    if view_full in ['o', 'oui', 'y', 'yes']:
-                        print(f"📊 Résultat complet: {json.dumps(result, indent=2, ensure_ascii=False)}")
+                        print(f"✅ {result['reason']}")
                         
             except KeyboardInterrupt:
                 print("\n\n👋 Au revoir!")

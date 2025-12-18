@@ -22,6 +22,8 @@ from typing import Dict, List, Optional
 # Import local
 from detect_anomaly import detect_anomaly, analyze_log_file, DEFAULT_MODEL
 
+from log_parser import parse_any_log
+
 # ============================================================================
 # CONFIGURATION
 # ============================================================================
@@ -101,7 +103,8 @@ print(response.json())"""
 @app.route("/api/v1/analyze", methods=["POST"])
 def analyze_single():
     """
-    Analyse un log unique
+    Analyse un log unique (texte OU JSON)
+    NOUVEAU : Support automatique des deux formats
     ---
     tags:
       - Analyse
@@ -140,11 +143,10 @@ def analyze_single():
                 "code": "NO_DATA"
             }), 400
         
-        log_text = data.get("log", "").strip()
+        log_input = data.get("log")
         model = data.get("model", DEFAULT_MODEL)
         
-        if not log_text:
-            logger.warning("Log vide reçu")
+        if not log_input:
             return jsonify({
                 "success": False,
                 "error": "Le champ 'log' ne peut pas être vide",
@@ -152,7 +154,12 @@ def analyze_single():
             }), 400
         
         # Journalisation
-        logger.info(f"Analyse demandée - Modèle: {model}, Log: {log_text[:80]}...")
+        # 🆕 Parse le log (texte ou JSON)
+        parsed_log = parse_any_log(log_input)
+        log_text = parsed_log["message"]  # Message normalisé pour l'IA
+        metadata = parsed_log["metadata"]
+        
+        logger.info(f"Analyse demandée - Format: {parsed_log['format']}, Modèle: {model}")
         
         # Appel à l'IA
         analysis_result = detect_anomaly(log_text, model)
@@ -166,6 +173,8 @@ def analyze_single():
                 "timestamp": datetime.now().isoformat(),
                 "metadata": {
                     "model_used": model,
+                    "input_format": parsed_log["format"],
+                    "parsed_metadata": metadata,
                     "processing_time_ms": "calculé_si_disponible"
                 }
             }
@@ -183,6 +192,48 @@ def analyze_single():
             "code": "INTERNAL_ERROR",
             "timestamp": datetime.now().isoformat()
         }), 500
+# 🆕 NOUVELLE ROUTE : Info sur les formats supportés
+@app.route("/api/v1/formats", methods=["GET"])
+def list_supported_formats():
+    """Liste les formats de logs supportés"""
+    return jsonify({
+        "success": True,
+        "data": {
+            "supported_formats": [
+                {
+                    "name": "text",
+                    "description": "Logs texte brut",
+                    "example": "Failed SSH login from 10.0.0.5"
+                },
+                {
+                    "name": "json",
+                    "description": "Logs JSON structurés",
+                    "example": {
+                        "level": "ERROR",
+                        "message": "Authentication failed",
+                        "source_ip": "10.0.0.5"
+                    }
+                },
+                {
+                    "name": "elk",
+                    "description": "Format Elasticsearch/Logstash",
+                    "example": {
+                        "@timestamp": "2025-12-18T20:30:45Z",
+                        "host": "server01",
+                        "message": "Security alert",
+                        "tags": ["security"]
+                    }
+                },
+                {
+                    "name": "syslog",
+                    "description": "Format Syslog (RFC 5424)",
+                    "example": "<34>Dec 18 20:30:45 server01 sshd[1234]: Failed login"
+                }
+            ],
+            "auto_detection": True,
+            "note": "Le système détecte automatiquement le format. Vous pouvez aussi spécifier 'format' dans la requête."
+        }
+    }), 200
 
 @app.route("/api/v1/analyze/batch", methods=["POST"])
 def analyze_batch():
